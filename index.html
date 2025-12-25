@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Device Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 40px;
+            border: 12px solid #000;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-bar {
+            background: #007AFF;
+            color: white;
+            padding: 8px 16px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 44px;
+        }
+
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: none;
+            padding: 0;
+        }
+
+        .app-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #007AFF 0%, #0051D5 100%);
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-menu {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .tab-bar {
+            display: flex;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            height: 60px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            left: 0;
+        }
+
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            color: #999;
+            transition: color 0.3s;
+            border: none;
+            background: none;
+        }
+
+        .tab-item.active {
+            color: #007AFF;
+        }
+
+        .tab-label {
+            font-size: 10px;
+            margin-top: 4px;
+        }
+
+        .content-area {
+            flex: 1;
+            padding-bottom: 70px;
+            overflow-y: auto;
+        }
+
+        /* Login Screen */
+        .screen {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .login-screen {
+            background: linear-gradient(135deg, #007AFF 0%, #0051D5 100%);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+
+        .login-logo {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #007AFF;
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .login-btn:hover {
+            background: #0051D5;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .signup-link a {
+            color: #007AFF;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Dashboard Screen */
+        .greeting {
+            padding: 16px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .greeting h2 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .greeting p {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .dashboard-card {
+            background: linear-gradient(135deg, #34C759 0%, #30B450 100%);
+            color: white;
+            padding: 16px;
+            margin: 16px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard-card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-card .stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .section-title {
+            padding: 16px 16px 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .device-card {
+            background: white;
+            margin: 0 16px 12px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .device-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .device-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .device-icon {
+            font-size: 32px;
+        }
+
+        .device-name {
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .device-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .device-status.online {
+            background: #D4EDDA;
+            color: #155724;
+        }
+
+        .device-status.offline {
+            background: #F8D7DA;
+            color: #721C24;
+        }
+
+        .device-info {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .battery-bar {
+            background: #f0f0f0;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .battery-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #34C759, #30B450);
+            border-radius: 3px;
+        }
+
+        .add-device-btn {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            margin: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: calc(100% - 32px);
+        }
+
+        .add-device-btn:hover {
+            background: #0051D5;
+        }
+
+        /* Detailed Device Screen */
+        .back-button {
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            margin-right: 12px;
+        }
+
+        .detail-video-area {
+            background: #000;
+            color: white;
+            padding: 40px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .detail-info {
+            padding: 16px;
+            background: white;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+        }
+
+        .info-value {
+            font-weight: 600;
+        }
+
+        .detail-buttons {
+            display: flex;
+            gap: 8px;
+            padding: 16px;
+            background: white;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            background: #f5f5f5;
+        }
+
+        /* Alerts Screen */
+        .alert-filter {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .filter-btn.active {
+            background: #007AFF;
+            color: white;
+            border-color: #007AFF;
+        }
+
+        .alert-card {
+            background: white;
+            margin: 0 12px 12px;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #FF3B30;
+            cursor: pointer;
+        }
+
+        .alert-card.read {
+            opacity: 0.6;
+            border-left-color: #999;
+        }
+
+        .alert-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .alert-icon {
+            font-size: 24px;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .alert-device {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* Account Screen */
+        .account-header {
+            background: white;
+            padding: 20px 16px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .account-avatar {
+            font-size: 60px;
+            margin-bottom: 12px;
+        }
+
+        .account-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .account-email {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .menu-section {
+            background: white;
+            margin: 12px 0;
+            padding: 12px 0;
+            border-top: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .menu-item {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        .menu-icon {
+            margin-right: 12px;
+        }
+
+        .logout-btn {
+            background: #FF3B30;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            margin: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: calc(100% - 32px);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 350px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .modal-btn.primary {
+            background: #007AFF;
+            color: white;
+            border-color: #007AFF;
+        }
+
+        .scrollable {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>📶 📡 🔋</span>
+        </div>
+
+        <!-- LOGIN SCREEN -->
+        <div class="screen login-screen active" id="loginScreen">
+            <div class="login-container">
+                <div class="login-logo">📱</div>
+                <h1 class="login-title">IoT Monitor</h1>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="password" required>
+                    </div>
+                    <button type="submit" class="login-btn">Login</button>
+                </form>
+                <div class="signup-link">
+                    Don't have account? <a onclick="showSignup()">Sign Up</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD SCREEN -->
+        <div class="app-content active" id="appContainer">
+            <div class="header">
+                <h1 id="currentTitle">Dashboard</h1>
+                <span class="header-menu">⚙️</span>
+            </div>
+
+            <div class="content-area scrollable">
+                <!-- HOME TAB -->
+                <div class="screen active" id="homeScreen">
+                    <div class="greeting">
+                        <h2>Hello, John</h2>
+                        <p>Welcome back</p>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div>
+                            <h3>Device Status</h3>
+                            <div class="stats">
+                                <div class="stat">
+                                    <div class="stat-value" id="totalDevices">6</div>
+                                    <div class="stat-label">Total</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value" id="onlineCount">5</div>
+                                    <div class="stat-label">Online</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value" id="offlineCount">1</div>
+                                    <div class="stat-label">Offline</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Recent Devices</div>
+                    <div id="devicesList"></div>
+                    <button class="add-device-btn" onclick="showAddDevice()">+ Add New Device</button>
+                </div>
+
+                <!-- DEVICES TAB -->
+                <div class="screen" id="devicesScreen">
+                    <div class="section-title">All Devices</div>
+                    <div id="allDevicesList"></div>
+                </div>
+
+                <!-- ALERTS TAB -->
+                <div class="screen" id="alertsScreen">
+                    <div class="alert-filter">
+                        <button class="filter-btn active" onclick="filterAlerts('all')">All</button>
+                        <button class="filter-btn" onclick="filterAlerts('unread')">Unread</button>
+                        <button class="filter-btn" onclick="filterAlerts('motion')">Motion</button>
+                    </div>
+                    <div id="alertsList"></div>
+                </div>
+
+                <!-- ACCOUNT TAB -->
+                <div class="screen" id="accountScreen">
+                    <div class="account-header">
+                        <div class="account-avatar">👤</div>
+                        <div class="account-name">John Doe</div>
+                        <div class="account-email">john@example.com</div>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-item">
+                            <span>✏️ Edit Profile</span>
+                            <span>→</span>
+                        </div>
+                        <div class="menu-item">
+                            <span>🔒 Change Password</span>
+                            <span>→</span>
+                        </div>
+                        <div class="menu-item">
+                            <span>🔐 2-Factor Auth</span>
+                            <span>→</span>
+                        </div>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-item">
+                            <span>🔔 Notifications</span>
+                            <span>→</span>
+                        </div>
+                        <div class="menu-item">
+                            <span>🌙 Dark Mode</span>
+                            <span>→</span>
+                        </div>
+                        <div class="menu-item">
+                            <span>📱 App Version</span>
+                            <span>v1.0.0</span>
+                        </div>
+                    </div>
+
+                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                </div>
+
+                <!-- DEVICE DETAIL SCREEN -->
+                <div class="screen" id="deviceDetailScreen">
+                    <div class="detail-video-area">
+                        <div id="deviceDetailContent"></div>
+                    </div>
+                    <div class="detail-info" id="deviceDetailInfo"></div>
+                    <div class="detail-buttons">
+                        <button class="action-btn" onclick="showModal('live')">📹 Live View</button>
+                        <button class="action-btn" onclick="showModal('video')">📺 Videos</button>
+                        <button class="action-btn" onclick="showModal('settings')">⚙️ Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-bar">
+                <button class="tab-item active" onclick="switchTab('home')">
+                    🏠
+                    <div class="tab-label">Home</div>
+                </button>
+                <button class="tab-item" onclick="switchTab('devices')">
+                    📱
+                    <div class="tab-label">Devices</div>
+                </button>
+                <button class="tab-item" onclick="switchTab('alerts')">
+                    🔔
+                    <div class="tab-label">Alerts</div>
+                </button>
+                <button class="tab-item" onclick="switchTab('account')">
+                    👤
+                    <div class="tab-label">Account</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal" id="addDeviceModal">
+        <div class="modal-content">
+            <div class="modal-title">Add New Device</div>
+            <input type="text" class="form-input" placeholder="Device Code" style="margin-bottom: 12px;">
+            <input type="text" class="form-input" placeholder="Device Name" style="margin-bottom: 12px;">
+            <div class="modal-buttons">
+                <button class="modal-btn" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="addDevice()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="liveViewModal">
+        <div class="modal-content">
+            <div class="modal-title">Live Stream</div>
+            <div style="background: #000; height: 200px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; color: white;">
+                📹 Live Video Stream
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn primary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="videoLibraryModal">
+        <div class="modal-content">
+            <div class="modal-title">Video Library</div>
+            <div class="scrollable" style="max-height: 300px;">
+                <div style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+                    📹 Recording 12/24 - 10:30 AM (45 sec)
+                </div>
+                <div style="padding: 12px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+                    📹 Recording 12/23 - 08:15 PM (2:30 min)
+                </div>
+                <div style="padding: 12px 0; cursor: pointer;">
+                    📹 Recording 12/22 - 03:45 PM (1:15 min)
+                </div>
+            </div>
+            <div class="modal-buttons" style="margin-top: 12px;">
+                <button class="modal-btn primary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-title">Device Settings</div>
+            <div style="margin-bottom: 12px;">
+                <label class="form-label">Recording Quality</label>
+                <select class="form-input">
+                    <option>1080p (High)</option>
+                    <option>720p (Medium)</option>
+                    <option>480p (Low)</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label class="form-label">Motion Detection</label>
+                <select class="form-input">
+                    <option>Enabled</option>
+                    <option>Disabled</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="saveSettings()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock Data
+        const devices = [
+            {
+                id: 1,
+                name: "RISE C1 Dash Cam #1",
+                type: "dash_cam",
+                status: "online",
+                battery: 85,
+                location: "Main Office",
+                lastSeen: "2 min ago",
+                icon: "📹"
+            },
+            {
+                id: 2,
+                name: "RISE C1 Body Cam #2",
+                type: "body_cam",
+                status: "online",
+                battery: 72,
+                location: "Warehouse",
+                lastSeen: "5 min ago",
+                icon: "📹"
+            },
+            {
+                id: 3,
+                name: "IntelPro DashCam #3",
+                type: "dashcam",
+                status: "online",
+                battery: 95,
+                location: "Parking Lot",
+                lastSeen: "1 min ago",
+                icon: "🎥"
+            },
+            {
+                id: 4,
+                name: "Door Bell #4",
+                type: "doorbell",
+                status: "online",
+                battery: 60,
+                location: "Front Gate",
+                lastSeen: "Just now",
+                icon: "🔔"
+            },
+            {
+                id: 5,
+                name: "Beacon N1 #5",
+                type: "beacon",
+                status: "offline",
+                battery: 15,
+                location: "Zone A",
+                lastSeen: "45 min ago",
+                icon: "📍"
+            },
+            {
+                id: 6,
+                name: "Temp Humidity Sensor #6",
+                type: "sensor",
+                status: "online",
+                battery: 88,
+                location: "Server Room",
+                lastSeen: "1 min ago",
+                icon: "🌡️"
+            }
+        ];
+
+        const alerts = [
+            {
+                id: 1,
+                type: "motion",
+                device: "RISE C1 Dash Cam #1",
+                message: "Motion detected",
+                time: "2 min ago",
+                icon: "🔴",
+                read: false
+            },
+            {
+                id: 2,
+                type: "offline",
+                device: "Beacon N1 #5",
+                message: "Device went offline",
+                time: "45 min ago",
+                icon: "⚠️",
+                read: false
+            },
+            {
+                id: 3,
+                type: "battery",
+                device: "Door Bell #4",
+                message: "Low battery (60%)",
+                time: "1 hour ago",
+                icon: "🔋",
+                read: true
+            }
+        ];
+
+        let currentScreen = 'home';
+        let selectedDevice = null;
+
+        function handleLogin(e) {
+            e.preventDefault();
+            document.getElementById('loginScreen').classList.remove('active');
+            document.getElementById('appContainer').classList.add('active');
+            renderDevices();
+            updateStats();
+            renderAlerts();
+        }
+
+        function handleLogout() {
+            document.getElementById('appContainer').classList.remove('active');
+            document.getElementById('loginScreen').classList.add('active');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function switchTab(tab) {
+            currentScreen = tab;
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'home') {
+                document.getElementById('homeScreen').classList.add('active');
+                document.getElementById('currentTitle').textContent = 'Dashboard';
+            } else if (tab === 'devices') {
+                document.getElementById('devicesScreen').classList.add('active');
+                document.getElementById('currentTitle').textContent = 'All Devices';
+                renderAllDevices();
+            } else if (tab === 'alerts') {
+                document.getElementById('alertsScreen').classList.add('active');
+                document.getElementById('currentTitle').textContent = 'Alerts';
+                renderAlerts();
+            } else if (tab === 'account') {
+                document.getElementById('accountScreen').classList.add('active');
+                document.getElementById('currentTitle').textContent = 'Account';
+            }
+
+            event.target.closest('.tab-item').classList.add('active');
+        }
+
+        function renderDevices() {
+            const container = document.getElementById('devicesList');
+            container.innerHTML = devices.map(device => `
+                <div class="device-card" onclick="showDeviceDetail(${device.id})">
+                    <div class="device-header">
+                        <div class="device-icon">${device.icon}</div>
+                        <div class="device-name">${device.name}</div>
+                        <div class="device-status ${device.status}">${device.status}</div>
+                    </div>
+                    <div class="device-info">
+                        <span>${device.location}</span>
+                        <span>${device.lastSeen}</span>
+                    </div>
+                    <div class="battery-bar">
+                        <div class="battery-fill" style="width: ${device.battery}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAllDevices() {
+            const container = document.getElementById('allDevicesList');
+            container.innerHTML = devices.map(device => `
+                <div class="device-card" onclick="showDeviceDetail(${device.id})">
+                    <div class="device-header">
+                        <div class="device-icon">${device.icon}</div>
+                        <div class="device-name">${device.name}</div>
+                        <div class="device-status ${device.status}">${device.status}</div>
+                    </div>
+                    <div class="device-info">
+                        <span>${device.location}</span>
+                        <span>Battery: ${device.battery}%</span>
+                    </div>
+                    <div class="battery-bar">
+                        <div class="battery-fill" style="width: ${device.battery}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const online = devices.filter(d => d.status === 'online').length;
+            const offline = devices.filter(d => d.status === 'offline').length;
+            document.getElementById('totalDevices').textContent = devices.length;
+            document.getElementById('onlineCount').textContent = online;
+            document.getElementById('offlineCount').textContent = offline;
+        }
+
+        function renderAlerts() {
+            const container = document.getElementById('alertsList');
+            container.innerHTML = alerts.map(alert => `
+                <div class="alert-card ${alert.read ? 'read' : ''}" onclick="viewAlert(${alert.id})">
+                    <div class="alert-header">
+                        <div class="alert-icon">${alert.icon}</div>
+                        <div>
+                            <div class="alert-title">${alert.message}</div>
+                            <div class="alert-device">${alert.device}</div>
+                        </div>
+                    </div>
+                    <div class="alert-time">${alert.time}</div>
+                </div>
+            `).join('');
+        }
+
+        function showDeviceDetail(deviceId) {
+            selectedDevice = devices.find(d => d.id === deviceId);
+            document.getElementById('homeScreen').classList.remove('active');
+            document.getElementById('deviceDetailScreen').classList.add('active');
+            
+            document.getElementById('deviceDetailContent').innerHTML = `
+                <div style="margin-bottom: 16px;">
+                    <span onclick="backToHome()" class="back-button">← Back</span>
+                </div>
+                <h2 style="margin-top: 20px;">${selectedDevice.name}</h2>
+                <p style="margin-top: 8px; opacity: 0.8;">Live Video Stream</p>
+            `;
+
+            document.getElementById('deviceDetailInfo').innerHTML = `
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span class="info-value">${selectedDevice.status}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Battery</span>
+                    <span class="info-value">${selectedDevice.battery}%</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Location</span>
+                    <span class="info-value">${selectedDevice.location}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Last Seen</span>
+                    <span class="info-value">${selectedDevice.lastSeen}</span>
+                </div>
+            `;
+        }
+
+        function backToHome() {
+            document.getElementById('deviceDetailScreen').classList.remove('active');
+            document.getElementById('homeScreen').classList.add('active');
+        }
+
+        function showAddDevice() {
+            document.getElementById('addDeviceModal').classList.add('active');
+        }
+
+        function addDevice() {
+            alert('Device added successfully!');
+            closeModal();
+            updateStats();
+            renderDevices();
+        }
+
+        function showModal(type) {
+            if (type === 'live') {
+                document.getElementById('liveViewModal').classList.add('active');
+            } else if (type === 'video') {
+                document.getElementById('videoLibraryModal').classList.add('active');
+            } else if (type === 'settings') {
+                document.getElementById('settingsModal').classList.add('active');
+            }
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+        }
+
+        function saveSettings() {
+            alert('Settings saved!');
+            closeModal();
+        }
+
+        function viewAlert(alertId) {
+            const alert = alerts.find(a => a.id === alertId);
+            alert('Alert: ' + alert.message + '\nDevice: ' + alert.device);
+        }
+
+        function filterAlerts(type) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function showSignup() {
+            alert('Sign up functionality would be implemented here');
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            document.getElementById('email').value = 'john@example.com';
+            document.getElementById('password').value = 'password123';
+        });
+    </script>
+</body>
+</html>
