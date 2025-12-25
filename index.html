@@ -28,6 +28,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .status-bar {
@@ -39,19 +40,20 @@
             justify-content: space-between;
             align-items: center;
             height: 44px;
+            flex-shrink: 0;
         }
 
         .app-content {
             flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
+            overflow: hidden;
             display: none;
+            flex-direction: column;
             padding: 0;
+            position: relative;
         }
 
         .app-content.active {
             display: flex;
-            flex-direction: column;
         }
 
         .header {
@@ -61,6 +63,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .header h1 {
@@ -82,6 +85,7 @@
             bottom: 0;
             width: 100%;
             left: 0;
+            z-index: 999;
         }
 
         .tab-item {
@@ -111,6 +115,7 @@
             flex: 1;
             padding-bottom: 70px;
             overflow-y: auto;
+            position: relative;
         }
 
         /* Login Screen */
@@ -118,7 +123,7 @@
             display: none;
             flex-direction: column;
             width: 100%;
-            height: 100%;
+            min-height: 100%;
         }
 
         .screen.active {
@@ -130,6 +135,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            min-height: 100%;
         }
 
         .login-container {
@@ -373,6 +379,10 @@
             padding: 40px;
             text-align: center;
             font-size: 14px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .detail-info {
@@ -565,7 +575,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            z-index: 2000;
             align-items: center;
             justify-content: center;
         }
@@ -882,7 +892,7 @@
                 battery: 72,
                 location: "Warehouse",
                 lastSeen: "5 min ago",
-                icon: "📹"
+                icon: "👕"
             },
             {
                 id: 3,
@@ -983,20 +993,22 @@
             if (tab === 'home') {
                 document.getElementById('homeScreen').classList.add('active');
                 document.getElementById('currentTitle').textContent = 'Dashboard';
+                event.target.closest('.tab-item').classList.add('active');
             } else if (tab === 'devices') {
                 document.getElementById('devicesScreen').classList.add('active');
                 document.getElementById('currentTitle').textContent = 'All Devices';
                 renderAllDevices();
+                event.target.closest('.tab-item').classList.add('active');
             } else if (tab === 'alerts') {
                 document.getElementById('alertsScreen').classList.add('active');
                 document.getElementById('currentTitle').textContent = 'Alerts';
                 renderAlerts();
+                event.target.closest('.tab-item').classList.add('active');
             } else if (tab === 'account') {
                 document.getElementById('accountScreen').classList.add('active');
                 document.getElementById('currentTitle').textContent = 'Account';
+                event.target.closest('.tab-item').classList.add('active');
             }
-
-            event.target.closest('.tab-item').classList.add('active');
         }
 
         function renderDevices() {
@@ -1066,6 +1078,9 @@
         function showDeviceDetail(deviceId) {
             selectedDevice = devices.find(d => d.id === deviceId);
             document.getElementById('homeScreen').classList.remove('active');
+            document.getElementById('devicesScreen').classList.remove('active');
+            document.getElementById('alertsScreen').classList.remove('active');
+            document.getElementById('accountScreen').classList.remove('active');
             document.getElementById('deviceDetailScreen').classList.add('active');
             
             document.getElementById('deviceDetailContent').innerHTML = `
@@ -1099,6 +1114,7 @@
         function backToHome() {
             document.getElementById('deviceDetailScreen').classList.remove('active');
             document.getElementById('homeScreen').classList.add('active');
+            document.getElementById('currentTitle').textContent = 'Dashboard';
         }
 
         function showAddDevice() {
